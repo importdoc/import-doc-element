@@ -1,5 +1,7 @@
 import { Component, State, Listen, Prop, h } from '@stencil/core';
 
+const API_URL = 'https://api.importdoc.com'
+
 @Component({
   tag: 'import-doc',
   styleUrl: 'import-doc.css',
@@ -24,7 +26,8 @@ export class ImportDoc {
 
   private async fetchDocument(url: string) {
     try {
-      const response = await fetch(url, { mode: 'cors' });
+      const iframe = url.includes(API_URL) && this.inIframe()
+      const response = await fetch(iframe ? url + '&iframe=1' : url, { mode: 'cors' });
       if (!response.ok) {
         throw new Error(`Fetch failed: ${response.statusText}`);
       }
@@ -36,6 +39,14 @@ export class ImportDoc {
     } catch (e) {
       console.error(e);
       return '';
+    }
+  }
+
+  inIframe() {
+    try {
+      return window.self !== window.top;
+    } catch (e) {
+      return true;
     }
   }
 
