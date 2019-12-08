@@ -1,66 +1,58 @@
-import { Component, State, Listen, Prop, h } from '@stencil/core';
-
-const API_URL = 'https://api.importdoc.com'
+import { Element, Component, State, Listen, Prop, h } from "@stencil/core";
 
 @Component({
-  tag: 'import-doc',
-  styleUrl: 'import-doc.css',
+  tag: "import-doc",
+  styleUrl: "import-doc.css",
   shadow: true
 })
 export class ImportDoc {
-
   @Prop() src: string;
+  @Element() el: HTMLElement;
 
-  @State() focused: boolean = true
-  @State() document: string = ''
+  @State() focused: boolean = false;
+  @State() document: string = "";
 
-  @Listen('focus', { target: 'window' })
+  @Listen("focus", { target: "window" })
   async handleFocus() {
-    this.focused = true
+    this.focused = true;
   }
 
-  @Listen('blur', { target: 'window' })
+  @Listen("blur", { target: "window" })
   handleBlur() {
-    this.focused = false
+    this.focused = false;
   }
 
   private async fetchDocument(url: string) {
     try {
-      const iframe = url.includes(API_URL) && this.inIframe()
-      const response = await fetch(iframe ? url + '&iframe=1' : url, { mode: 'cors' });
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Fetch failed: ${response.statusText}`);
       }
       const text = await response.text();
       if (this.src !== url) {
-        return '';
+        return "";
       }
       return text;
     } catch (e) {
       console.error(e);
-      return '';
+      return "";
     }
   }
 
-  inIframe() {
-    try {
-      return window.self !== window.top;
-    } catch (e) {
-      return true;
-    }
-  }
-
-  async componentWillLoad() {
-    this.document = await this.fetchDocument(this.src)
+  async componentDidLoad() {
+    this.document = await this.fetchDocument(this.src);
   }
 
   async componentWillUpdate() {
     if (this.focused) {
-      this.document = await this.fetchDocument(this.src)
+      this.document = await this.fetchDocument(this.src);
     }
   }
 
   render() {
+    if (!this.document) {
+      return <slot name="loading" />;
+    }
     return <div innerHTML={this.document}></div>;
   }
 }

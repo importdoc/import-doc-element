@@ -2,6 +2,7 @@ import { Config } from '@stencil/core';
 
 export const config: Config = {
   namespace: 'import-doc',
+  globalScript: 'src/global/index.ts',
   outputTargets: [
     {
       type: 'dist',

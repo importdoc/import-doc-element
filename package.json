@@ -1,6 +1,6 @@
 {
   "name": "import-doc",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "import-doc Element",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -21,7 +21,7 @@
     "test.watch": "stencil test --spec --e2e --watchAll"
   },
   "devDependencies": {
-    "@stencil/core": "^1.0.7"
+    "@stencil/core": "^1.7.5"
   },
   "license": "MIT"
 }
