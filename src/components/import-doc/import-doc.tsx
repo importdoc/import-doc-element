@@ -1,19 +1,51 @@
-import { Element, Component, State, Listen, Prop, h } from "@stencil/core";
+import {
+  Component,
+  State,
+  Element,
+  Listen,
+  Prop,
+  h,
+  Watch,
+  Host,
+} from "@stencil/core";
+import { ResizeObserver as ResizeObserverPolyfill } from "@juggle/resize-observer";
+
+declare global {
+  interface Window {
+    ResizeObserver: typeof ResizeObserverPolyfill;
+  }
+}
+
+const ResizeObserver = window.ResizeObserver || ResizeObserverPolyfill;
 
 @Component({
   tag: "import-doc",
   styleUrl: "import-doc.css",
-  shadow: true
 })
 export class ImportDoc {
-  @Prop() src: string;
-  @Element() el: HTMLElement;
+  @Element() element?: HTMLElement;
+  @Prop() dataId?: string;
+  @Prop() src?: string;
+  @Prop() noFonts?: boolean;
+
+  container?: HTMLDivElement;
+  ro?: ResizeObserverPolyfill;
 
   @State() focused: boolean = false;
-  @State() document: string = "";
+  @State() loading?: boolean = true;
+  @State() breakpoints?: { [breakpoint: string]: number };
+
+  @Watch("dataId")
+  async watchHandler(newValue: string, oldValue: string) {
+    if (newValue !== oldValue) {
+      this.loading = true;
+      await this.fetchDocument();
+      this.loading = false;
+    }
+  }
 
   @Listen("focus", { target: "window" })
-  async handleFocus() {
+  handleFocus() {
     this.focused = true;
   }
 
@@ -22,37 +54,76 @@ export class ImportDoc {
     this.focused = false;
   }
 
-  private async fetchDocument(url: string) {
+  private async fetchDocument(force: boolean = false) {
     try {
+      const url = this.dataId
+        ? `API_URL/document?id=${this.dataId}${force ? "&force=true" : ""}${
+            this.noFonts ? "" : "&fonts=true"
+          }`
+        : this.src;
+      if (!url) return;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Fetch failed: ${response.statusText}`);
       }
-      const text = await response.text();
-      if (this.src !== url) {
-        return "";
+      const data = await response.text();
+      if (this.container) {
+        this.container.innerHTML = data;
+        const data_element = this.container.querySelector("#__IMPORTDOC_DATA");
+        if (data_element) {
+          this.breakpoints = JSON.parse(data_element.innerHTML).breakpoints;
+        }
       }
-      return text;
+      this.loading = false;
     } catch (e) {
       console.error(e);
-      return "";
+      return;
     }
   }
 
-  async componentDidLoad() {
-    this.document = await this.fetchDocument(this.src);
+  componentDidLoad() {
+    this.ro = new ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        this.container?.style.setProperty(
+          "--ew",
+          entry.contentRect.width + "px"
+        );
+        if (this.breakpoints)
+          Object.keys(this.breakpoints).forEach((breakpoint: string) => {
+            const minWidth = this.breakpoints && this.breakpoints[breakpoint];
+            if (minWidth && entry.contentRect.width >= minWidth) {
+              entry.target.classList.add(breakpoint);
+            } else {
+              entry.target.classList.remove(breakpoint);
+            }
+          });
+      });
+    });
+    this.container && this.ro?.observe(this.container);
+    return this.fetchDocument();
   }
 
-  async componentWillUpdate() {
+  componentDidUnload() {
+    this.ro?.disconnect();
+  }
+
+  componentWillUpdate() {
     if (this.focused) {
-      this.document = await this.fetchDocument(this.src);
+      return this.fetchDocument(true);
     }
   }
 
   render() {
-    if (!this.document) {
-      return <slot name="loading" />;
-    }
-    return <div innerHTML={this.document}></div>;
+    return (
+      <Host>
+        <div
+          style={{ display: this.loading ? "none" : "block" }}
+          ref={(el) => (this.container = el as HTMLDivElement)}
+        ></div>
+        <div style={{ display: this.loading ? "block" : "none" }}>
+          <slot name="loading" />
+        </div>
+      </Host>
+    );
   }
 }

@@ -7,9 +7,11 @@
 
 ## Properties
 
-| Property | Attribute | Description | Type     | Default     |
-| -------- | --------- | ----------- | -------- | ----------- |
-| `src`    | `src`     |             | `string` | `undefined` |
+| Property  | Attribute  | Description | Type                   | Default     |
+| --------- | ---------- | ----------- | ---------------------- | ----------- |
+| `dataId`  | `data-id`  |             | `string \| undefined`  | `undefined` |
+| `noFonts` | `no-fonts` |             | `boolean \| undefined` | `undefined` |
+| `src`     | `src`      |             | `string \| undefined`  | `undefined` |
 
 
 ----------------------------------------------

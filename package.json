@@ -1,6 +1,6 @@
 {
   "name": "import-doc",
-  "version": "0.0.5",
+  "version": "1.0.0",
   "description": "import-doc Element",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -17,11 +17,18 @@
   "scripts": {
     "build": "stencil build --docs",
     "start": "stencil build --dev --watch --serve",
+    "serve": "stencil build --watch --serve",
     "test": "stencil test --spec --e2e",
     "test.watch": "stencil test --spec --e2e --watchAll"
   },
   "devDependencies": {
-    "@stencil/core": "^1.7.5"
+    "@rollup/plugin-replace": "^2.3.1",
+    "@stencil/core": "^1.12.3",
+    "rollup": "^2.3.4",
+    "workbox-build": "4.3.1"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@juggle/resize-observer": "^3.1.3"
+  }
 }
